@@ -79,6 +79,12 @@ module.exports = function(app){
                 pagamento.id = resultado.insertId;
                 console.log('pagamento criado');
 
+                var memcachedClient = app.servicos.memcachedClient();
+                memcachedClient.set('pagamento-' + pagamento.id, pagamento,
+                    60000, function(erro){
+                        console.log('nova chave adicionada ao cache: pagamento-' + pagamento.id);
+                    });
+
                 if (pagamento.forma_de_pagamento == 'cartao'){
                     var cartao = req.body["cartao"];
                     console.log(cartao);
@@ -122,7 +128,9 @@ module.exports = function(app){
 
 
                 } else {
-                    res.location('/pagamentos/pagamento/' + pagamento.id);
+                    res.location('/pagamentos/pagamento/' +
+                        pagamento.id);
+
                     var response = {
                         dados_do_pagamanto: pagamento,
                         links: [
@@ -139,9 +147,43 @@ module.exports = function(app){
                                 method:"DELETE"
                             }
                         ]
-                    };
+                    }
+
                     res.status(201).json(response);
                 }
+            }
+        });
+
+    });
+
+    app.get('/pagamentos/pagamento/:id', function(req, res){
+        var id = req.params.id;
+        console.log('consultando pagamento: ' + id);
+
+        var memcachedClient = app.servicos.memcachedClient();
+
+        memcachedClient.get('pagamento-' + id, function(erro, retorno){
+            if (erro || !retorno){
+                console.log('MISS - chave nao encontrada');
+
+                var connection = app.persistencia.connectionFactory();
+                var pagamentoDao = new app.persistencia.PagamentoDao(connection);
+
+                pagamentoDao.buscaPorId(id, function(erro, resultado){
+                    if(erro){
+                        console.log('erro ao consultar no banco: ' + erro);
+                        res.status(500).send(erro);
+                        return;
+                    }
+                    console.log('pagamento encontrado: ' + JSON.stringify(resultado));
+                    res.json(resultado);
+                    return;
+                });
+                //HIT no cache
+            } else {
+                console.log('HIT - valor: ' + JSON.stringify(retorno));
+                res.json(retorno);
+                return;
             }
         });
 
