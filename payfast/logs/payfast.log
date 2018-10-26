@@ -1,0 +1,5 @@
+{"level":"info","message":"consultando pagamento: 4"}
+{"message":"::1 - - [26/Oct/2018:04:41:38 +0000] \"GET /pagamentos/pagamento/4 HTTP/1.1\" 200 164\n","level":"info"}
+{"level":"info","message":"consultando pagamento: 4"}
+{"message":"::1 - - [26/Oct/2018:04:41:53 +0000] \"GET /pagamentos/pagamento/4 HTTP/1.1\" 200 164\n","level":"info"}
+{"message":"::1 - - [26/Oct/2018:04:42:31 +0000] \"POST /pagamentos/pagamento/ HTTP/1.1\" 400 302\n","level":"info"}
